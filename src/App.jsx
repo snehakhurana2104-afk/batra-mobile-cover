@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import "./App.css";
 import batraLogo from "./images/Batra Logo.jpeg";

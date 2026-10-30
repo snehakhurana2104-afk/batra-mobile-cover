@@ -1,5 +1,6 @@
+
 /* =====================================================
-   MOBILE CASES - GLOBAL FONT
+   MOBILE CASES - MATCHING APP.CSS THEME
 ===================================================== */
 
 .mobile-cases-page,
@@ -11,139 +12,119 @@
 }
 
 .mobile-cases-page {
-  min-height: 100vh;
+  --mc-navy: #17243a;
+  --mc-gold: #c59a55;
+  --mc-ink: #253147;
+  --mc-muted: #717b8b;
+  --mc-border: #eceef1;
+  --mc-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+
   width: 100%;
-  padding: 38px 4.5%;
-  background: #fbfaff;
-  color: #17213d;
+  min-height: 100vh;
+  padding: 38px clamp(20px, 5vw, 75px);
+  background: #fafafa;
+  color: var(--mc-ink);
 }
 
-/* =====================================================
-   TOP BAR
-===================================================== */
+/* Top bar */
 
 .mc-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 18px;
-  margin-bottom: 42px;
+  margin-bottom: 40px;
 }
 
 .mc-back-button {
-  border: 1px solid #e5e2ef;
-  border-radius: 10px;
-  padding: 11px 17px;
+  padding: 10px 17px;
+  border: 1px solid var(--mc-border);
+  border-radius: 6px;
   background: #fff;
-  color: #5e55a5;
+  color: var(--mc-navy);
   font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .mc-back-button:hover {
-  background: #f2efff;
-  border-color: #cfc5ff;
+  border-color: var(--mc-gold);
+  color: var(--mc-gold);
 }
 
 .mc-breadcrumb {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #9995a8;
+  color: #929aa5;
   font-size: 12px;
 }
 
 .mc-breadcrumb strong {
-  color: #6652db;
+  color: var(--mc-gold);
 }
 
-/* =====================================================
-   PAGE HEADING
-===================================================== */
+/* Page heading */
 
 .mc-page-heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 25px;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .mc-eyebrow {
   display: inline-block;
-  color: #7155ff;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 2px;
+  color: var(--mc-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
 }
 
 .mc-page-heading h1 {
-  margin: 16px 0 8px;
-  color: #17213d;
-  font-size: clamp(27px, 3vw, 39px);
+  margin: 12px 0 8px;
+  color: var(--mc-navy);
+  font-size: clamp(30px, 4vw, 42px);
   line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.5px;
 }
 
 .mc-page-heading p {
   margin: 0;
-  color: #85849a;
-  font-size: 14px;
+  color: var(--mc-muted);
+  font-size: 15px;
   line-height: 1.7;
 }
 
-.mc-show-all,
-.mc-all-models {
-  border: 0;
-  background: transparent;
-  color: #6b50f5;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.mc-show-all:hover,
-.mc-all-models:hover {
-  color: #4930d5;
-}
-
-/* =====================================================
-   MAIN LAYOUT
-===================================================== */
+/* Main layout */
 
 .mc-layout {
   display: grid;
-  grid-template-columns: minmax(215px, 235px) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
   align-items: start;
-  gap: 22px;
+  gap: 24px;
 }
 
 .mc-sidebar,
 .mc-model-panel {
+  min-width: 0;
+  border: 1px solid var(--mc-border);
+  border-radius: 12px;
   background: #fff;
-  border: 1px solid #e8e5f0;
-  border-radius: 17px;
-  box-shadow: 0 8px 30px rgba(35, 28, 75, 0.035);
+  box-shadow: var(--mc-shadow);
 }
 
 .mc-sidebar {
-  padding: 18px 14px;
   position: sticky;
-  top: 18px;
+  top: 20px;
+  padding: 19px 15px;
 }
 
 .mc-model-panel {
-  min-width: 0;
+  min-height: 440px;
   padding: 30px;
 }
 
-/* =====================================================
-   SIDEBAR
-===================================================== */
+/* Sidebar */
 
 .mc-sidebar-heading {
   display: flex;
@@ -151,17 +132,17 @@
   align-items: center;
   gap: 8px;
   padding: 8px 5px 17px;
-  border-bottom: 1px solid #eeeaf5;
-  color: #17213d;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
+  border-bottom: 1px solid var(--mc-border);
+  color: var(--mc-navy);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }
 
 .mc-sidebar-heading span:last-child {
-  color: #9994ac;
-  font-size: 10px;
-  font-weight: 500;
+  color: var(--mc-muted);
+  font-size: 11px;
+  font-weight: 400;
   letter-spacing: 0;
 }
 
@@ -169,40 +150,47 @@
   margin-top: 20px;
 }
 
+.mc-sidebar-section-label {
+  margin: 5px 0 10px;
+  color: var(--mc-gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
 .mc-brand-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding-top: 12px;
+  gap: 6px;
 }
 
 .mc-brand-item {
   width: 100%;
-  min-height: 48px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 9px 11px;
+  gap: 10px;
+  padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 7px;
   background: #fff;
-  color: #34405d;
+  color: var(--mc-ink);
   text-align: left;
   font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .mc-brand-item:hover {
-  background: #f8f6ff;
-  border-color: #e7e1ff;
+  border-color: #e8dfd0;
+  background: #faf8f4;
 }
 
 .mc-brand-active {
-  color: #6249ed;
-  background: #f0edff;
-  border-color: #e0d9ff;
+  border-color: var(--mc-gold);
+  background: #f8f4ed;
+  color: var(--mc-navy);
+  box-shadow: 0 0 0 2px rgba(197, 154, 85, 0.10);
 }
 
 .mc-brand-letter {
@@ -212,11 +200,11 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #e6e1f5;
-  border-radius: 9px;
-  background: #fff;
-  color: #7659ff;
-  font-size: 12px;
+  border: 1px solid #ece5d9;
+  border-radius: 6px;
+  background: #faf8f4;
+  color: var(--mc-gold);
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -226,97 +214,60 @@
 }
 
 .mc-chevron {
-  color: #9b91c9;
+  color: #a0a6af;
   font-size: 20px;
 }
 
-/* =====================================================
-   ANDROID BRANDS EXPANSION
-===================================================== */
-
-.mc-sidebar-android-brands {
-  margin: 5px 0 5px 14px;
-  padding: 7px 0 5px 10px;
-  border-left: 2px solid #eeeaff;
-}
-
-.mc-sidebar-section-label {
-  margin: 5px 0 10px;
-  color: #9993aa;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-
-.mc-nested-brand {
-  min-height: 42px;
-  margin-bottom: 4px;
-  padding: 6px 8px;
-  font-size: 12px;
-}
-
-.mc-nested-brand .mc-brand-letter {
-  width: 27px;
-  height: 27px;
-  flex-basis: 27px;
-}
+/* More brands */
 
 .mc-more-brands {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 8px;
   padding: 10px 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
-  color: #7054f4;
+  color: var(--mc-gold);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .mc-more-brands:hover {
-  background: #f5f2ff;
+  background: #faf8f4;
 }
 
-.mc-sidebar-subnote {
-  padding: 7px 10px;
-  color: #9691a5;
-  font-size: 11px;
-}
-
-/* =====================================================
-   SEARCH BAR
-===================================================== */
+/* Search */
 
 .mc-sidebar-search {
-  margin: 14px 0 20px;
+  margin: 16px 0 20px;
 }
 
 .mc-model-search {
   width: 100%;
-  min-height: 47px;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 0 15px;
-  margin: 0 0 19px;
-  border: 1px solid #e7e4ef;
-  border-radius: 10px;
-  background: #fdfcff;
-  color: #8e87a9;
+  gap: 10px;
+  padding: 0 13px;
+  margin: 0 0 18px;
+  border: 1px solid var(--mc-border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--mc-muted);
   transition: 0.2s ease;
 }
 
 .mc-model-search:focus-within {
-  border-color: #a99aff;
-  box-shadow: 0 0 0 3px rgba(112, 84, 244, 0.08);
+  border-color: var(--mc-gold);
+  box-shadow: 0 0 0 3px rgba(197, 154, 85, 0.10);
 }
 
 .mc-model-search > span {
-  font-size: 22px;
-  line-height: 1;
+  font-size: 21px;
 }
 
 .mc-model-search input {
@@ -325,17 +276,15 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #26314f;
+  color: var(--mc-ink);
   font-size: 13px;
 }
 
 .mc-model-search input::placeholder {
-  color: #a09bad;
+  color: #a0a6af;
 }
 
-/* =====================================================
-   GLOBAL SEARCH RESULTS
-===================================================== */
+/* Global search results */
 
 .mc-search-results {
   display: flex;
@@ -343,10 +292,10 @@
   gap: 3px;
   padding: 6px;
   margin: -10px 0 18px;
-  border: 1px solid #e9e5f2;
-  border-radius: 11px;
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
   background: #fff;
-  box-shadow: 0 8px 22px rgba(35, 28, 75, 0.05);
+  box-shadow: var(--mc-shadow);
 }
 
 .mc-search-result {
@@ -355,17 +304,17 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 10px 11px;
+  padding: 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 5px;
   background: #fff;
-  color: #283451;
+  color: var(--mc-ink);
   text-align: left;
   cursor: pointer;
 }
 
 .mc-search-result:hover {
-  background: #f5f2ff;
+  background: #faf8f4;
 }
 
 .mc-search-result span:first-child {
@@ -379,7 +328,7 @@
 }
 
 .mc-search-result small {
-  color: #9691a5;
+  color: var(--mc-muted);
   font-size: 10px;
 }
 
@@ -387,13 +336,11 @@
 .mc-search-no-result {
   margin: 0;
   padding: 8px 10px;
-  color: #9691a5;
-  font-size: 11px;
+  color: var(--mc-muted);
+  font-size: 12px;
 }
 
-/* =====================================================
-   MODEL HEADING
-===================================================== */
+/* Model heading */
 
 .mc-model-heading {
   display: flex;
@@ -405,28 +352,25 @@
 
 .mc-model-heading h2,
 .mc-first-time-state h2 {
-  margin: 12px 0 5px;
-  color: #17213d;
-  font-size: 23px;
+  margin: 12px 0 6px;
+  color: var(--mc-navy);
+  font-size: 25px;
   line-height: 1.3;
-  font-weight: 650;
 }
 
 .mc-model-heading p {
   margin: 0;
-  color: #85849a;
+  color: var(--mc-muted);
   font-size: 13px;
   line-height: 1.6;
 }
 
-/* =====================================================
-   PHONE MODEL GRID
-===================================================== */
+/* Model grid */
 
 .mc-model-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 11px;
 }
 
 .mc-model-card {
@@ -434,33 +378,33 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 13px;
-  border: 1px solid #e6e3ed;
-  border-radius: 10px;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--mc-border);
+  border-radius: 7px;
   background: #fff;
-  color: #26314f;
+  color: var(--mc-ink);
   text-align: left;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .mc-model-card:hover {
-  border-color: #c9bdff;
-  background: #faf9ff;
-  transform: translateY(-1px);
+  border-color: var(--mc-gold);
+  background: #faf8f4;
+  transform: translateY(-2px);
 }
 
 .mc-model-card.mc-model-selected {
-  border-color: #a996ff;
-  background: #f0edff;
-  color: #6249ed;
-  box-shadow: 0 0 0 2px rgba(112, 84, 244, 0.06);
+  border-color: var(--mc-gold);
+  background: #f8f4ed;
+  color: var(--mc-navy);
+  box-shadow: 0 0 0 2px rgba(197, 154, 85, 0.10);
 }
 
 .mc-model-icon {
   flex: 0 0 auto;
-  color: #7659ff;
+  color: var(--mc-gold);
   font-size: 17px;
 }
 
@@ -469,22 +413,19 @@
   min-width: 0;
   overflow-wrap: anywhere;
   font-size: 12px;
-  font-weight: 550;
   line-height: 1.4;
 }
 
 .mc-model-arrow {
   flex: 0 0 auto;
-  color: #9a8bdc;
+  color: #a0a6af;
   font-size: 17px;
 }
 
-/* =====================================================
-   FIRST TIME INSTRUCTION
-===================================================== */
+/* First-time instruction */
 
 .mc-first-time-state {
-  min-height: 310px;
+  min-height: 370px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -500,13 +441,9 @@
 .mc-first-time-state p {
   max-width: 510px;
   margin: 0;
-  color: #85849a;
-  font-size: 13px;
+  color: var(--mc-muted);
+  font-size: 14px;
   line-height: 1.8;
-}
-
-.mc-first-time-state p strong {
-  color: #4c456a;
 }
 
 .mc-first-time-actions {
@@ -517,48 +454,44 @@
   margin-top: 23px;
 }
 
-/* =====================================================
-   EMPTY STATE
-===================================================== */
+/* Empty state */
 
 .mc-empty-state {
   padding: 42px 20px;
-  border: 1px dashed #e3deef;
-  border-radius: 12px;
-  background: #fdfcff;
+  border: 1px dashed #e2e2e2;
+  border-radius: 9px;
+  background: #fafafa;
   text-align: center;
 }
 
 .mc-empty-state > span {
-  color: #8c78f5;
-  font-size: 28px;
+  color: var(--mc-gold);
+  font-size: 30px;
 }
 
 .mc-empty-state h3 {
   margin: 10px 0 6px;
-  color: #26314f;
-  font-size: 16px;
+  color: var(--mc-navy);
+  font-size: 17px;
 }
 
 .mc-empty-state p {
   margin: 0 0 16px;
-  color: #8c899a;
-  font-size: 12px;
+  color: var(--mc-muted);
+  font-size: 13px;
 }
 
-/* =====================================================
-   SELECTED MODEL
-===================================================== */
+/* Selected model */
 
 .mc-bottom-note {
-  margin-top: 24px;
-  padding-top: 18px;
-  border-top: 1px solid #eeeaf5;
+  margin-top: 25px;
+  padding-top: 19px;
+  border-top: 1px solid var(--mc-border);
 }
 
 .mc-bottom-note > p {
   margin: 0;
-  color: #9691a5;
+  color: var(--mc-muted);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -573,27 +506,25 @@
 .mc-selected-info strong {
   display: block;
   margin-bottom: 5px;
-  color: #26314f;
-  font-size: 14px;
+  color: var(--mc-navy);
+  font-size: 15px;
 }
 
 .mc-selected-info p {
   margin: 0;
-  color: #89869a;
-  font-size: 11px;
+  color: var(--mc-muted);
+  font-size: 12px;
   line-height: 1.5;
 }
 
-/* =====================================================
-   BUTTONS
-===================================================== */
+/* Buttons */
 
 .mc-whatsapp-button {
   flex: 0 0 auto;
   border: 0;
-  border-radius: 9px;
-  padding: 12px 17px;
-  background: #6e52f5;
+  border-radius: 5px;
+  padding: 12px 18px;
+  background: var(--mc-navy);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -602,30 +533,28 @@
 }
 
 .mc-whatsapp-button:hover {
-  background: #5438df;
+  background: #263b5c;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(91, 64, 220, 0.2);
+  box-shadow: var(--mc-shadow);
 }
 
 .mc-reset-button {
-  border: 1px solid #e3def5;
-  border-radius: 8px;
-  padding: 9px 14px;
+  border: 1px solid #e4e5e8;
+  border-radius: 5px;
+  padding: 10px 14px;
   background: #fff;
-  color: #6b50ed;
+  color: var(--mc-navy);
   font-size: 12px;
-  font-weight: 650;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .mc-reset-button:hover {
-  background: #f5f2ff;
-  border-color: #cfc4ff;
+  border-color: var(--mc-gold);
+  color: var(--mc-gold);
 }
 
-/* =====================================================
-   RESPONSIVE - TABLET
-===================================================== */
+/* Tablet */
 
 @media (max-width: 1050px) {
   .mobile-cases-page {
@@ -633,7 +562,7 @@
   }
 
   .mc-layout {
-    grid-template-columns: 205px minmax(0, 1fr);
+    grid-template-columns: 215px minmax(0, 1fr);
     gap: 16px;
   }
 
@@ -646,9 +575,7 @@
   }
 }
 
-/* =====================================================
-   RESPONSIVE - MOBILE
-===================================================== */
+/* Mobile */
 
 @media (max-width: 760px) {
   .mobile-cases-page {
@@ -660,12 +587,11 @@
   }
 
   .mc-page-heading {
-    align-items: flex-start;
     margin-bottom: 22px;
   }
 
   .mc-page-heading h1 {
-    font-size: 29px;
+    font-size: 30px;
   }
 
   .mc-layout {
@@ -674,17 +600,6 @@
 
   .mc-sidebar {
     position: static;
-  }
-
-  .mc-sidebar-android-brands {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 7px;
-  }
-
-  .mc-sidebar-section-label,
-  .mc-more-brands {
-    grid-column: 1 / -1;
   }
 
   .mc-model-panel {
@@ -696,9 +611,7 @@
   }
 }
 
-/* =====================================================
-   RESPONSIVE - SMALL MOBILE
-===================================================== */
+/* Small mobile */
 
 @media (max-width: 480px) {
   .mobile-cases-page {
@@ -710,11 +623,6 @@
     flex-direction: column;
     gap: 12px;
     margin-bottom: 25px;
-  }
-
-  .mc-page-heading {
-    flex-direction: column;
-    gap: 10px;
   }
 
   .mc-page-heading h1 {
@@ -730,15 +638,12 @@
   }
 
   .mc-model-heading {
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .mc-model-heading h2 {
-    font-size: 20px;
-  }
-
-  .mc-model-heading p {
-    font-size: 11px;
+    font-size: 21px;
   }
 
   .mc-model-grid {
@@ -760,8 +665,8 @@
   }
 
   .mc-first-time-state {
-    min-height: 260px;
-    padding: 32px 10px;
+    min-height: 280px;
+    padding: 30px 10px;
   }
 
   .mc-first-time-state h2 {
