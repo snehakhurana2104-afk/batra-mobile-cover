@@ -1,10 +1,14 @@
+
 import React, { useMemo, useState } from "react";
 import "./App.css";
 import batraLogo from "./images/Batra Logo.jpeg";
 
 import * as MobileCasesModule from "./Products/MobileCases.jsx";
+import * as MobileCasesIphoneModule from "./Products/MobileCasesIphone.jsx";
 import * as ChargersCablesModule from "./Products/ChargersCables.jsx";
 import * as EarphonesHeadphonesModule from "./Products/EarphonesHeadphones.jsx";
+
+import "./Products/MobileCasesIphone.css";
 
 const getComponent = (module, preferredName) =>
   module.default ||
@@ -12,22 +16,65 @@ const getComponent = (module, preferredName) =>
   Object.values(module).find((value) => typeof value === "function");
 
 const MobileCases = getComponent(MobileCasesModule, "MobileCases");
+
+const MobileCasesIphone = getComponent(
+  MobileCasesIphoneModule,
+  "MobileCasesIphone"
+);
+
 const ChargersCables = getComponent(
   ChargersCablesModule,
   "ChargersCables"
 );
+
 const EarphonesHeadphones = getComponent(
   EarphonesHeadphonesModule,
   "EarphonesHeadphones"
 );
 
+// Set VITE_API_URL in your Vercel environment variables
+// Example: https://your-backend-domain.com
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || ""
+).replace(/\/$/, "");
+
 const categories = [
-  { name: "Mobile Cases", subtitle: "Protection & Style", icon: "▣", color: "purple" },
-  { name: "Chargers & Cables", subtitle: "Power Up Your Device", icon: "ϟ", color: "blue" },
-  { name: "Earphones & Headphones", subtitle: "Crystal Clear Sound", icon: "♫", color: "green" },
-  { name: "Smart Watch", subtitle: "Stay Fit, Stay Smart", icon: "⌚", color: "orange" },
-  { name: "Screen Guards", subtitle: "Keep It Safe", icon: "▯", color: "pink" },
-  { name: "Other Accessories", subtitle: "More for Your Mobile", icon: "◉", color: "lavender" },
+  {
+    name: "Mobile Cases",
+    subtitle: "Protection & Style",
+    icon: "▣",
+    color: "purple",
+  },
+  {
+    name: "Chargers & Cables",
+    subtitle: "Power Up Your Device",
+    icon: "ϟ",
+    color: "blue",
+  },
+  {
+    name: "Earphones & Headphones",
+    subtitle: "Crystal Clear Sound",
+    icon: "♫",
+    color: "green",
+  },
+  {
+    name: "Smart Watch",
+    subtitle: "Stay Fit, Stay Smart",
+    icon: "⌚",
+    color: "orange",
+  },
+  {
+    name: "Screen Guards",
+    subtitle: "Keep It Safe",
+    icon: "▯",
+    color: "pink",
+  },
+  {
+    name: "Other Accessories",
+    subtitle: "More for Your Mobile",
+    icon: "◉",
+    color: "lavender",
+  },
 ];
 
 const products = [
@@ -40,7 +87,8 @@ const products = [
     discount: "25% OFF",
     rating: 4.8,
     reviews: 124,
-    image: "https://images.unsplash.com/photo-1603313011101-320f26a4f6f6?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1603313011101-320f26a4f6f6?auto=format&fit=crop&w=700&q=85",
   },
   {
     id: 2,
@@ -51,7 +99,8 @@ const products = [
     discount: "20% OFF",
     rating: 4.7,
     reviews: 98,
-    image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=700&q=85",
   },
   {
     id: 3,
@@ -62,7 +111,8 @@ const products = [
     discount: "15% OFF",
     rating: 4.6,
     reviews: 76,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=700&q=85",
   },
   {
     id: 4,
@@ -73,7 +123,8 @@ const products = [
     discount: "New",
     rating: 4.5,
     reviews: 52,
-    image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=700&q=85",
   },
   {
     id: 5,
@@ -84,7 +135,8 @@ const products = [
     discount: "30% OFF",
     rating: 4.7,
     reviews: 91,
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=700&q=85",
   },
   {
     id: 6,
@@ -95,7 +147,8 @@ const products = [
     discount: "20% OFF",
     rating: 4.4,
     reviews: 67,
-    image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=700&q=85",
+    image:
+      "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=700&q=85",
   },
 ];
 
@@ -104,16 +157,31 @@ const formatPrice = (price) =>
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(Number(price) || 0);
 
 function App() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
+
   const [showCart, setShowCart] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+
   const [activePage, setActivePage] = useState("home");
+
+  // ADMIN LOGIN STATES
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const [adminToken, setAdminToken] = useState(
+    sessionStorage.getItem("batraAdminToken") || ""
+  );
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -160,6 +228,77 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // ADMIN LOGIN
+  const handleAdminLogin = async (event) => {
+    event.preventDefault();
+
+    setLoginError("");
+    setLoginLoading(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/admin/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: adminEmail.trim().toLowerCase(),
+            password: adminPassword,
+          }),
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.token) {
+        setLoginError(
+          data.message || "Invalid email or password."
+        );
+        return;
+      }
+
+      sessionStorage.setItem("batraAdminToken", data.token);
+
+      setAdminToken(data.token);
+      setIsAdmin(true);
+
+      setShowAdminLogin(false);
+      setAdminEmail("");
+      setAdminPassword("");
+      setLoginError("");
+
+      alert("Owner login successful!");
+
+      goToPage("mobile-cases-iphone");
+    } catch (error) {
+      console.error("Admin login error:", error);
+
+      setLoginError(
+        "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // ADMIN LOGOUT
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem("batraAdminToken");
+
+    setAdminToken("");
+    setIsAdmin(false);
+
+    setShowAdminLogin(false);
+    setAdminEmail("");
+    setAdminPassword("");
+
+    goToPage("home");
+
+    alert("You have been logged out.");
+  };
+
   const selectCategory = (category) => {
     if (category === "Mobile Cases") {
       goToPage("mobile-cases");
@@ -180,6 +319,7 @@ function App() {
     setSelectedCategory(category);
     setMobileMenu(false);
     setShowCart(false);
+
     scrollToSection("products");
   };
 
@@ -189,6 +329,7 @@ function App() {
     setSearch("");
     setMobileMenu(false);
     setShowCart(false);
+
     scrollToSection("products");
   };
 
@@ -201,12 +342,21 @@ function App() {
       if (existing) {
         return currentCart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
             : item
         );
       }
 
-      return [...currentCart, { ...product, quantity: 1 }];
+      return [
+        ...currentCart,
+        {
+          ...product,
+          quantity: 1,
+        },
+      ];
     });
   };
 
@@ -215,7 +365,10 @@ function App() {
       currentCart
         .map((item) =>
           item.id === productId
-            ? { ...item, quantity: item.quantity + amount }
+            ? {
+                ...item,
+                quantity: item.quantity + amount,
+              }
             : item
         )
         .filter((item) => item.quantity > 0)
@@ -247,7 +400,7 @@ function App() {
       `\n\nTotal: ${formatPrice(cartTotal)}` +
       "\n\nPlease confirm product availability and delivery details.";
 
-    // Replace with the shop's real WhatsApp number, including country code.
+    // Replace this with the real shop WhatsApp number.
     const whatsappNumber = "91XXXXXXXXXX";
 
     window.open(
@@ -264,6 +417,7 @@ function App() {
 
   return (
     <div className="app">
+      {/* ANNOUNCEMENT BAR */}
       <div className="announcement">
         <span>✦ Latest Mobile Accessories</span>
         <span className="announcement-divider">|</span>
@@ -272,6 +426,7 @@ function App() {
         <span>Shop Smart. Stay Connected.</span>
       </div>
 
+      {/* HEADER */}
       <header className="header" id="top">
         <button
           className="brand"
@@ -313,6 +468,15 @@ function App() {
             onClick={() => selectCategory("Mobile Cases")}
           >
             Mobile Cases
+          </button>
+
+          <button
+            className={`nav-link ${
+              activePage === "mobile-cases-iphone" ? "active" : ""
+            }`}
+            onClick={() => goToPage("mobile-cases-iphone")}
+          >
+            iPhone Cases
           </button>
 
           <button
@@ -398,6 +562,7 @@ function App() {
         </div>
       </header>
 
+      {/* CART PANEL */}
       {showCart && (
         <aside className="cart-panel">
           <div className="cart-panel-heading">
@@ -429,7 +594,9 @@ function App() {
 
                       <div className="quantity-control">
                         <button
-                          onClick={() => changeQuantity(item.id, -1)}
+                          onClick={() =>
+                            changeQuantity(item.id, -1)
+                          }
                           aria-label={`Decrease ${item.name} quantity`}
                         >
                           −
@@ -438,7 +605,9 @@ function App() {
                         <span>{item.quantity}</span>
 
                         <button
-                          onClick={() => changeQuantity(item.id, 1)}
+                          onClick={() =>
+                            changeQuantity(item.id, 1)
+                          }
                           aria-label={`Increase ${item.name} quantity`}
                         >
                           +
@@ -469,9 +638,26 @@ function App() {
         </aside>
       )}
 
-      {activePage === "mobile-cases" ? (
+      {/* PAGE CONTENT */}
+      {activePage === "mobile-cases-iphone" ? (
+        MobileCasesIphone ? (
+          <MobileCasesIphone
+            isAdmin={isAdmin}
+            adminToken={adminToken}
+            onBack={() => goToPage("mobile-cases")}
+            onAddToCart={addToCart}
+          />
+        ) : (
+          <p>MobileCasesIphone component export is missing.</p>
+        )
+      ) : activePage === "mobile-cases" ? (
         MobileCases ? (
-          <MobileCases onBack={() => goToPage("home")} />
+          <MobileCases
+            onBack={() => goToPage("home")}
+            onOpenIphone={() =>
+              goToPage("mobile-cases-iphone")
+            }
+          />
         ) : (
           <p>Mobile Cases component export is missing.</p>
         )
@@ -483,12 +669,15 @@ function App() {
         )
       ) : activePage === "earphones-headphones" ? (
         EarphonesHeadphones ? (
-          <EarphonesHeadphones onBack={() => goToPage("home")} />
+          <EarphonesHeadphones
+            onBack={() => goToPage("home")}
+          />
         ) : (
           <p>Earphones &amp; Headphones component export is missing.</p>
         )
       ) : (
         <main>
+          {/* HERO SECTION */}
           <section className="hero" id="home">
             <div className="hero-content">
               <div className="eyebrow">
@@ -605,7 +794,11 @@ function App() {
             </div>
           </section>
 
-          <section className="section categories-section" id="categories">
+          {/* CATEGORIES */}
+          <section
+            className="section categories-section"
+            id="categories"
+          >
             <div className="section-heading">
               <div>
                 <div className="section-eyebrow">
@@ -614,12 +807,16 @@ function App() {
                 </div>
 
                 <h2>Find Your Essentials</h2>
+
                 <p>
                   Explore accessories for your phone and everyday tech.
                 </p>
               </div>
 
-              <button className="text-link" onClick={showAllProducts}>
+              <button
+                className="text-link"
+                onClick={showAllProducts}
+              >
                 View all products <span>→</span>
               </button>
             </div>
@@ -635,8 +832,12 @@ function App() {
                   key={category.name}
                   onClick={() => selectCategory(category.name)}
                 >
-                  <span className="category-icon">{category.icon}</span>
+                  <span className="category-icon">
+                    {category.icon}
+                  </span>
+
                   <strong>{category.name}</strong>
+
                   <span className="category-subtitle">
                     {category.subtitle}
                   </span>
@@ -645,7 +846,11 @@ function App() {
             </div>
           </section>
 
-          <section className="section products-section" id="products">
+          {/* PRODUCTS */}
+          <section
+            className="section products-section"
+            id="products"
+          >
             <div className="section-heading">
               <div>
                 <div className="section-eyebrow">
@@ -664,18 +869,26 @@ function App() {
                 </p>
               </div>
 
-              <button className="text-link" onClick={showAllProducts}>
+              <button
+                className="text-link"
+                onClick={showAllProducts}
+              >
                 Show all <span>→</span>
               </button>
             </div>
 
             <div className="product-grid">
               {filteredProducts.map((product) => (
-                <article className="product-card" key={product.id}>
+                <article
+                  className="product-card"
+                  key={product.id}
+                >
                   <div className="product-image-wrap">
                     <span
                       className={`discount-badge ${
-                        product.discount === "New" ? "new-badge" : ""
+                        product.discount === "New"
+                          ? "new-badge"
+                          : ""
                       }`}
                     >
                       {product.discount}
@@ -683,9 +896,13 @@ function App() {
 
                     <button
                       className={`favorite-button ${
-                        favorites.includes(product.id) ? "is-favorite" : ""
+                        favorites.includes(product.id)
+                          ? "is-favorite"
+                          : ""
                       }`}
-                      onClick={() => toggleFavorite(product.id)}
+                      onClick={() =>
+                        toggleFavorite(product.id)
+                      }
                       aria-label={
                         favorites.includes(product.id)
                           ? "Remove from favourites"
@@ -719,15 +936,22 @@ function App() {
 
                     <div className="rating-row">
                       <span className="stars">★★★★★</span>
-                      <span className="rating-value">{product.rating}</span>
+                      <span className="rating-value">
+                        {product.rating}
+                      </span>
                       <span className="review-count">
                         ({product.reviews})
                       </span>
                     </div>
 
                     <div className="price-row">
-                      <strong>{formatPrice(product.price)}</strong>
-                      <del>{formatPrice(product.oldPrice)}</del>
+                      <strong>
+                        {formatPrice(product.price)}
+                      </strong>
+
+                      <del>
+                        {formatPrice(product.oldPrice)}
+                      </del>
                     </div>
 
                     <button
@@ -745,9 +969,11 @@ function App() {
               <div className="no-products">
                 <span>⌕</span>
                 <h3>No products found</h3>
+
                 <p>
                   Try another search or select a different category.
                 </p>
+
                 <button
                   className="primary-button"
                   onClick={showAllProducts}
@@ -758,17 +984,23 @@ function App() {
             )}
           </section>
 
+          {/* ABOUT */}
           <section className="about-section" id="about">
             <div className="about-icon">✦</div>
 
             <div>
-              <div className="section-eyebrow">ABOUT BATRA</div>
+              <div className="section-eyebrow">
+                ABOUT BATRA
+              </div>
+
               <h2>Your Everyday Mobile Accessories Store</h2>
+
               <p>
-                Batra Mobile Accessories brings together useful accessories
-                for your phone and everyday technology. Browse the collection
-                and contact us to check product availability, device
-                compatibility and local delivery options.
+                Batra Mobile Accessories brings together useful
+                accessories for your phone and everyday technology.
+                Browse the collection and contact us to check product
+                availability, device compatibility and local delivery
+                options.
               </p>
             </div>
 
@@ -782,6 +1014,97 @@ function App() {
         </main>
       )}
 
+      {/* ADMIN LOGIN MODAL */}
+      {showAdminLogin && (
+        <div
+          className="admin-login-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowAdminLogin(false);
+              setLoginError("");
+            }
+          }}
+        >
+          <form
+            className="admin-login-box"
+            onSubmit={handleAdminLogin}
+          >
+            <button
+              type="button"
+              className="admin-login-close"
+              onClick={() => {
+                setShowAdminLogin(false);
+                setLoginError("");
+              }}
+              aria-label="Close login"
+            >
+              ×
+            </button>
+
+            <span className="section-eyebrow">
+              BATRA MOBILE ACCESSORIES
+            </span>
+
+            <h2>Owner Login</h2>
+
+            <p>
+              Sign in to manage products, images and prices.
+            </p>
+
+            <label htmlFor="admin-email">
+              Email Address
+            </label>
+
+            <input
+              id="admin-email"
+              type="email"
+              autoComplete="username"
+              value={adminEmail}
+              onChange={(event) =>
+                setAdminEmail(event.target.value)
+              }
+              placeholder="Enter owner email"
+              required
+            />
+
+            <label htmlFor="admin-password">
+              Password
+            </label>
+
+            <input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              value={adminPassword}
+              onChange={(event) =>
+                setAdminPassword(event.target.value)
+              }
+              placeholder="Enter password"
+              required
+            />
+
+            {loginError && (
+              <p className="admin-login-error" role="alert">
+                {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="primary-button admin-login-submit"
+              disabled={loginLoading}
+            >
+              {loginLoading ? "Logging in..." : "Login"}
+            </button>
+
+            <p className="admin-login-note">
+              Owner access only.
+            </p>
+          </form>
+        </div>
+      )}
+
+      {/* FOOTER */}
       <footer className="footer" id="contact">
         <div className="footer-main">
           <div className="footer-brand">
@@ -789,26 +1112,40 @@ function App() {
               src={batraLogo}
               alt="Batra Mobile Accessories"
             />
+
             <p>
-              Mobile accessories for your everyday needs. Find your style,
-              protect your device and stay connected.
+              Mobile accessories for your everyday needs. Find your
+              style, protect your device and stay connected.
             </p>
           </div>
 
           <div className="footer-column">
             <h3>Quick Links</h3>
-            <button onClick={() => goToPage("home")}>Home</button>
-            <button onClick={showAllProducts}>Shop Products</button>
-            <button onClick={() => goHomeAndScroll("categories")}>
+
+            <button onClick={() => goToPage("home")}>
+              Home
+            </button>
+
+            <button onClick={showAllProducts}>
+              Shop Products
+            </button>
+
+            <button
+              onClick={() => goHomeAndScroll("categories")}
+            >
               Categories
             </button>
-            <button onClick={() => goHomeAndScroll("about")}>
+
+            <button
+              onClick={() => goHomeAndScroll("about")}
+            >
               About Us
             </button>
           </div>
 
           <div className="footer-column">
             <h3>Categories</h3>
+
             {categories.slice(0, 4).map((category) => (
               <button
                 key={category.name}
@@ -821,18 +1158,45 @@ function App() {
 
           <div className="footer-column">
             <h3>Contact Us</h3>
+
             <p>
               Have a question about a product or phone compatibility?
             </p>
+
             <button
               className="footer-contact-link"
               onClick={() => setShowCart(true)}
             >
               View your cart
             </button>
+
             <button onClick={showAllProducts}>
               Browse products →
             </button>
+          </div>
+
+          {/* OWNER LOGIN IN FOOTER */}
+          <div className="footer-column">
+            <h3>Owner Access</h3>
+
+            {isAdmin ? (
+              <>
+                <p>Admin account is active.</p>
+
+                <button onClick={handleAdminLogout}>
+                  Admin Logout
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  setShowAdminLogin(true);
+                  setLoginError("");
+                }}
+              >
+                Owner Login
+              </button>
+            )}
           </div>
         </div>
 
@@ -840,7 +1204,10 @@ function App() {
           <span>
             © {new Date().getFullYear()} Batra Mobile Accessories.
           </span>
-          <span>Thank you for shopping with us.</span>
+
+          <span>
+            Thank you for shopping with us.
+          </span>
         </div>
       </footer>
     </div>

@@ -2,13 +2,15 @@
 import React, { useMemo, useState } from "react";
 import "./MobileCases.css";
 
+
+
 const phoneBrands = [
   {
     name: "Apple",
     short: "A",
     category: "iPhone",
     models: [
-      "iPhone 7", "iPhone 7 Plus", "iPhone 8", "iPhone 8 Plus",
+      "iPhone 7 & iPhone 8",
       "iPhone X", "iPhone XR", "iPhone XS", "iPhone XS Max",
       "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max",
       "iPhone 12", "iPhone 12 Mini", "iPhone 12 Pro", "iPhone 12 Pro Max",
@@ -198,7 +200,7 @@ const phoneBrands = [
 const initialVisibleBrands = 8;
 const WHATSAPP_NUMBER = "91XXXXXXXXXX";
 
-export default function MobileCases({ onBack }) {
+export default function MobileCases({ onBack, onOpenIphone = () => {} }) {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [selectedModel, setSelectedModel] = useState("");
   const [showAllBrands, setShowAllBrands] = useState(false);
@@ -245,6 +247,11 @@ export default function MobileCases({ onBack }) {
   }, [globalSearch]);
 
   const chooseBrand = (brandName) => {
+    if (brandName === "Apple") {
+      onOpenIphone();
+      return;
+    }
+
     setSelectedBrand(brandName);
     setSelectedModel("");
     setModelSearch("");
@@ -252,6 +259,11 @@ export default function MobileCases({ onBack }) {
   };
 
   const chooseSearchResult = (result) => {
+    if (result.brand === "Apple") {
+      onOpenIphone();
+      return;
+    }
+
     setSelectedBrand(result.brand);
     setSelectedModel(result.model);
     setModelSearch("");
