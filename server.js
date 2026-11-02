@@ -101,8 +101,24 @@ function configureCloudinary() {
 }
 
 // Health check
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Batra backend is running" });
+
+app.get("/api/health", async (req, res) => {
+  try {
+    const products = await getProductsCollection();
+    await products.findOne({});
+
+    res.json({
+      status: "ok",
+      message: "Batra backend and MongoDB are connected",
+      database: "connected",
+    });
+  } catch (error) {
+    console.error("Health check error:", error.message);
+    res.status(500).json({
+      status: "error",
+      message: "MongoDB connection failed",
+    });
+  }
 });
 
 // Owner login
