@@ -1,8 +1,12 @@
+
+
 import React, { useMemo, useState } from "react";
 
 import "./App.css";
 
 import batraLogo from "./images/Batra Logo.jpeg";
+
+
 
 import * as MobileCasesModule from "./Products/MobileCases.jsx";
 
@@ -12,7 +16,11 @@ import * as ChargersCablesModule from "./Products/ChargersCables.jsx";
 
 import * as EarphonesHeadphonesModule from "./Products/EarphonesHeadphones.jsx";
 
+
+
 import "./Products/MobileCasesIphone.css";
+
+
 
 const getComponent = (module, preferredName) =>
 
@@ -22,7 +30,11 @@ const getComponent = (module, preferredName) =>
 
   Object.values(module).find((value) => typeof value === "function");
 
+
+
 const MobileCases = getComponent(MobileCasesModule, "MobileCases");
+
+
 
 const MobileCasesIphone = getComponent(
 
@@ -32,6 +44,8 @@ const MobileCasesIphone = getComponent(
 
 );
 
+
+
 const ChargersCables = getComponent(
 
   ChargersCablesModule,
@@ -40,6 +54,8 @@ const ChargersCables = getComponent(
 
 );
 
+
+
 const EarphonesHeadphones = getComponent(
 
   EarphonesHeadphonesModule,
@@ -47,6 +63,8 @@ const EarphonesHeadphones = getComponent(
   "EarphonesHeadphones"
 
 );
+
+
 
 // Set VITE_API_URL in your Vercel environment variables
 
@@ -57,6 +75,8 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_URL || ""
 
 ).replace(/\/$/, "");
+
+
 
 const categories = [
 
@@ -133,6 +153,8 @@ const categories = [
   },
 
 ];
+
+
 
 const products = [
 
@@ -282,6 +304,8 @@ const products = [
 
 ];
 
+
+
 const formatPrice = (price) =>
 
   new Intl.NumberFormat("en-IN", {
@@ -294,21 +318,31 @@ const formatPrice = (price) =>
 
   }).format(Number(price) || 0);
 
+
+
 function App() {
 
   const [search, setSearch] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+
+
   const [cart, setCart] = useState([]);
 
   const [favorites, setFavorites] = useState([]);
+
+
 
   const [showCart, setShowCart] = useState(false);
 
   const [mobileMenu, setMobileMenu] = useState(false);
 
+
+
   const [activePage, setActivePage] = useState("home");
+
+
 
   // ADMIN LOGIN STATES
 
@@ -325,15 +359,21 @@ function App() {
 
   const [loginLoading, setLoginLoading] = useState(false);
 
+
+
   const [adminToken, setAdminToken] = useState(
 
     sessionStorage.getItem("batraAdminToken") || ""
 
   );
 
+
+
   const filteredProducts = useMemo(() => {
 
     const query = search.trim().toLowerCase();
+
+
 
     return products.filter((product) => {
 
@@ -345,17 +385,23 @@ function App() {
 
         product.category.toLowerCase().includes(query);
 
+
+
       const matchesCategory =
 
         selectedCategory === "All" ||
 
         product.category === selectedCategory;
 
+
+
       return matchesSearch && matchesCategory;
 
     });
 
   }, [search, selectedCategory]);
+
+
 
   const cartCount = cart.reduce(
 
@@ -365,6 +411,8 @@ function App() {
 
   );
 
+
+
   const cartTotal = cart.reduce(
 
     (total, item) => total + item.price * item.quantity,
@@ -373,7 +421,11 @@ function App() {
 
   );
 
+
+
   const isHomePage = activePage === "home";
+
+
 
   const scrollToSection = (id) => {
 
@@ -391,6 +443,8 @@ function App() {
 
   };
 
+
+
   const goToPage = (page) => {
 
     setActivePage(page);
@@ -403,15 +457,21 @@ function App() {
 
   };
 
+
+
   // ADMIN LOGIN
 
   const handleAdminLogin = async (event) => {
 
     event.preventDefault();
 
+
+
     setLoginError("");
 
     setLoginLoading(true);
+
+
 
     try {
 
@@ -441,7 +501,11 @@ function App() {
 
       );
 
+
+
       const data = await response.json().catch(() => ({}));
+
+
 
       if (!response.ok || !data.token) {
 
@@ -455,11 +519,17 @@ function App() {
 
       }
 
+
+
       sessionStorage.setItem("batraAdminToken", data.token);
+
+
 
       setAdminToken(data.token);
 
       setIsAdmin(true);
+
+
 
       setShowAdminLogin(false);
 
@@ -469,13 +539,19 @@ function App() {
 
       setLoginError("");
 
+
+
       alert("Owner login successful!");
 
-      goToPage("mobile-cases-iphone");
+
+
+      goToPage("home");
 
     } catch (error) {
 
       console.error("Admin login error:", error);
+
+
 
       setLoginError(
 
@@ -491,15 +567,21 @@ function App() {
 
   };
 
+
+
   // ADMIN LOGOUT
 
   const handleAdminLogout = () => {
 
     sessionStorage.removeItem("batraAdminToken");
 
+
+
     setAdminToken("");
 
     setIsAdmin(false);
+
+
 
     setShowAdminLogin(false);
 
@@ -507,11 +589,17 @@ function App() {
 
     setAdminPassword("");
 
+
+
     goToPage("home");
+
+
 
     alert("You have been logged out.");
 
   };
+
+
 
   const selectCategory = (category) => {
 
@@ -523,6 +611,8 @@ function App() {
 
     }
 
+
+
     if (category === "Chargers & Cables") {
 
       goToPage("chargers-cables");
@@ -530,6 +620,8 @@ function App() {
       return;
 
     }
+
+
 
     if (category === "Earphones & Headphones") {
 
@@ -539,6 +631,8 @@ function App() {
 
     }
 
+
+
     setActivePage("home");
 
     setSelectedCategory(category);
@@ -547,9 +641,13 @@ function App() {
 
     setShowCart(false);
 
+
+
     scrollToSection("products");
 
   };
+
+
 
   const showAllProducts = () => {
 
@@ -563,9 +661,13 @@ function App() {
 
     setShowCart(false);
 
+
+
     scrollToSection("products");
 
   };
+
+
 
   const addToCart = (product) => {
 
@@ -576,6 +678,8 @@ function App() {
         (item) => item.id === product.id
 
       );
+
+
 
       if (existing) {
 
@@ -597,6 +701,8 @@ function App() {
 
       }
 
+
+
       return [
 
         ...currentCart,
@@ -614,6 +720,8 @@ function App() {
     });
 
   };
+
+
 
   const changeQuantity = (productId, amount) => {
 
@@ -643,6 +751,8 @@ function App() {
 
   };
 
+
+
   const toggleFavorite = (productId) => {
 
     setFavorites((current) =>
@@ -657,9 +767,13 @@ function App() {
 
   };
 
+
+
   const orderOnWhatsApp = () => {
 
     if (cart.length === 0) return;
+
+
 
     const orderLines = cart
 
@@ -677,6 +791,8 @@ function App() {
 
       .join("\n");
 
+
+
     const message =
 
       `Hello Batra Mobile Accessories! I would like to order:\n\n${orderLines}` +
@@ -685,9 +801,13 @@ function App() {
 
       "\n\nPlease confirm product availability and delivery details.";
 
+
+
     // Replace this with the real shop WhatsApp number.
 
     const whatsappNumber = "91XXXXXXXXXX";
+
+
 
     window.open(
 
@@ -701,6 +821,8 @@ function App() {
 
   };
 
+
+
   const goHomeAndScroll = (id) => {
 
     goToPage("home");
@@ -708,6 +830,8 @@ function App() {
     scrollToSection(id);
 
   };
+
+
 
   return (
 
@@ -728,6 +852,8 @@ function App() {
         <span>Shop Smart. Stay Connected.</span>
 
       </div>
+
+
 
       {/* HEADER */}
 
@@ -755,6 +881,8 @@ function App() {
 
         </button>
 
+
+
         <button
 
           className="menu-toggle"
@@ -771,6 +899,8 @@ function App() {
 
         </button>
 
+
+
         <nav className={`nav ${mobileMenu ? "nav-open" : ""}`}>
 
           <button
@@ -785,11 +915,15 @@ function App() {
 
           </button>
 
+
+
           <button className="nav-link" onClick={showAllProducts}>
 
             Shop
 
           </button>
+
+
 
           <button
 
@@ -807,6 +941,8 @@ function App() {
 
           </button>
 
+
+
           <button
 
             className={`nav-link ${
@@ -822,6 +958,8 @@ function App() {
             iPhone Cases
 
           </button>
+
+
 
           <button
 
@@ -839,6 +977,8 @@ function App() {
 
           </button>
 
+
+
           <button
 
             className={`nav-link ${
@@ -855,6 +995,8 @@ function App() {
 
           </button>
 
+
+
           <button
 
             className="nav-link"
@@ -867,6 +1009,8 @@ function App() {
 
           </button>
 
+
+
           <button
 
             className="nav-link"
@@ -878,6 +1022,8 @@ function App() {
             About Us
 
           </button>
+
+
 
           <button
 
@@ -893,11 +1039,15 @@ function App() {
 
         </nav>
 
+
+
         <div className="header-actions">
 
           <label className="search-box">
 
             <span className="search-icon">⌕</span>
+
+
 
             <input
 
@@ -927,6 +1077,8 @@ function App() {
 
             />
 
+
+
             {search && (
 
               <button
@@ -946,6 +1098,8 @@ function App() {
             )}
 
           </label>
+
+
 
           <button
 
@@ -971,6 +1125,8 @@ function App() {
 
       </header>
 
+
+
       {/* CART PANEL */}
 
       {showCart && (
@@ -980,6 +1136,8 @@ function App() {
           <div className="cart-panel-heading">
 
             <h3>Your Cart ({cartCount})</h3>
+
+
 
             <button
 
@@ -996,6 +1154,8 @@ function App() {
             </button>
 
           </div>
+
+
 
           {cart.length === 0 ? (
 
@@ -1017,11 +1177,15 @@ function App() {
 
                     <img src={item.image} alt={item.name} />
 
+
+
                     <div className="cart-item-info">
 
                       <strong>{item.name}</strong>
 
                       <span>{formatPrice(item.price)}</span>
+
+
 
                       <div className="quantity-control">
 
@@ -1041,7 +1205,11 @@ function App() {
 
                         </button>
 
+
+
                         <span>{item.quantity}</span>
+
+
 
                         <button
 
@@ -1069,6 +1237,8 @@ function App() {
 
               </div>
 
+
+
               <div className="cart-total">
 
                 <span>Total</span>
@@ -1076,6 +1246,8 @@ function App() {
                 <strong>{formatPrice(cartTotal)}</strong>
 
               </div>
+
+
 
               <button
 
@@ -1088,6 +1260,8 @@ function App() {
                 Order on WhatsApp →
 
               </button>
+
+
 
               <p className="cart-note">
 
@@ -1102,6 +1276,8 @@ function App() {
         </aside>
 
       )}
+
+
 
       {/* PAGE CONTENT */}
 
@@ -1153,7 +1329,12 @@ function App() {
 
         ChargersCables ? (
 
-          <ChargersCables onBack={() => goToPage("home")} />
+          <ChargersCables
+            isAdmin={isAdmin}
+            adminToken={adminToken}
+            onBack={() => goToPage("home")}
+            onAddToCart={addToCart}
+          />
 
         ) : (
 
@@ -1166,9 +1347,10 @@ function App() {
         EarphonesHeadphones ? (
 
           <EarphonesHeadphones
-
+            isAdmin={isAdmin}
+            adminToken={adminToken}
             onBack={() => goToPage("home")}
-
+            onAddToCart={addToCart}
           />
 
         ) : (
@@ -1195,6 +1377,8 @@ function App() {
 
               </div>
 
+
+
               <h1>
 
                 Style Your Phone.
@@ -1205,6 +1389,8 @@ function App() {
 
               </h1>
 
+
+
               <p className="hero-description">
 
                 Discover mobile covers and everyday accessories that bring
@@ -1212,6 +1398,8 @@ function App() {
                 together protection, quality and personal style.
 
               </p>
+
+
 
               <div className="hero-buttons">
 
@@ -1227,6 +1415,8 @@ function App() {
 
                 </button>
 
+
+
                 <button
 
                   className="secondary-button"
@@ -1241,6 +1431,8 @@ function App() {
 
               </div>
 
+
+
               <div className="hero-note">
 
                 <span>✓</span>
@@ -1250,6 +1442,8 @@ function App() {
               </div>
 
             </div>
+
+
 
             <div
 
@@ -1265,6 +1459,8 @@ function App() {
 
               <div className="hero-orbit orbit-two" />
 
+
+
               <div className="hero-product hero-phone">
 
                 <img
@@ -1276,6 +1472,8 @@ function App() {
                 />
 
               </div>
+
+
 
               <div className="hero-product hero-earbuds">
 
@@ -1289,6 +1487,8 @@ function App() {
 
               </div>
 
+
+
               <div className="hero-product hero-watch">
 
                 <img
@@ -1301,6 +1501,8 @@ function App() {
 
               </div>
 
+
+
               <div className="floating-note">
 
                 <strong>Everyday</strong>
@@ -1311,6 +1513,8 @@ function App() {
 
               </div>
 
+
+
               <div className="hero-caption">
 
                 <span className="caption-dot" />
@@ -1320,6 +1524,8 @@ function App() {
               </div>
 
             </div>
+
+
 
             <div className="trust-row">
 
@@ -1337,6 +1543,8 @@ function App() {
 
               </div>
 
+
+
               <div className="trust-item">
 
                 <span className="trust-icon">♡</span>
@@ -1351,6 +1559,8 @@ function App() {
 
               </div>
 
+
+
               <div className="trust-item">
 
                 <span className="trust-icon">↗</span>
@@ -1364,6 +1574,8 @@ function App() {
                 </div>
 
               </div>
+
+
 
               <div className="trust-item">
 
@@ -1382,6 +1594,8 @@ function App() {
             </div>
 
           </section>
+
+
 
           {/* CATEGORIES */}
 
@@ -1405,7 +1619,11 @@ function App() {
 
                 </div>
 
+
+
                 <h2>Find Your Essentials</h2>
+
+
 
                 <p>
 
@@ -1414,6 +1632,8 @@ function App() {
                 </p>
 
               </div>
+
+
 
               <button
 
@@ -1428,6 +1648,8 @@ function App() {
               </button>
 
             </div>
+
+
 
             <div className="category-grid">
 
@@ -1457,7 +1679,11 @@ function App() {
 
                   </span>
 
+
+
                   <strong>{category.name}</strong>
+
+
 
                   <span className="category-subtitle">
 
@@ -1472,6 +1698,8 @@ function App() {
             </div>
 
           </section>
+
+
 
           {/* PRODUCTS */}
 
@@ -1495,6 +1723,8 @@ function App() {
 
                 </div>
 
+
+
                 <h2>
 
                   {selectedCategory === "All"
@@ -1505,6 +1735,8 @@ function App() {
 
                 </h2>
 
+
+
                 <p>
 
                   Explore popular picks for your mobile and daily use.
@@ -1512,6 +1744,8 @@ function App() {
                 </p>
 
               </div>
+
+
 
               <button
 
@@ -1526,6 +1760,8 @@ function App() {
               </button>
 
             </div>
+
+
 
             <div className="product-grid">
 
@@ -1558,6 +1794,8 @@ function App() {
                       {product.discount}
 
                     </span>
+
+
 
                     <button
 
@@ -1593,6 +1831,8 @@ function App() {
 
                     </button>
 
+
+
                     <img
 
                       className="product-image"
@@ -1604,6 +1844,8 @@ function App() {
                       loading="lazy"
 
                     />
+
+
 
                     <button
 
@@ -1619,6 +1861,8 @@ function App() {
 
                   </div>
 
+
+
                   <div className="product-details">
 
                     <span className="product-category">
@@ -1627,7 +1871,11 @@ function App() {
 
                     </span>
 
+
+
                     <h3>{product.name}</h3>
+
+
 
                     <div className="rating-row">
 
@@ -1647,6 +1895,8 @@ function App() {
 
                     </div>
 
+
+
                     <div className="price-row">
 
                       <strong>
@@ -1655,6 +1905,8 @@ function App() {
 
                       </strong>
 
+
+
                       <del>
 
                         {formatPrice(product.oldPrice)}
@@ -1662,6 +1914,8 @@ function App() {
                       </del>
 
                     </div>
+
+
 
                     <button
 
@@ -1683,6 +1937,8 @@ function App() {
 
             </div>
 
+
+
             {filteredProducts.length === 0 && (
 
               <div className="no-products">
@@ -1691,11 +1947,15 @@ function App() {
 
                 <h3>No products found</h3>
 
+
+
                 <p>
 
                   Try another search or select a different category.
 
                 </p>
+
+
 
                 <button
 
@@ -1715,11 +1975,15 @@ function App() {
 
           </section>
 
+
+
           {/* ABOUT */}
 
           <section className="about-section" id="about">
 
             <div className="about-icon">✦</div>
+
+
 
             <div>
 
@@ -1729,7 +1993,11 @@ function App() {
 
               </div>
 
+
+
               <h2>Your Everyday Mobile Accessories Store</h2>
+
+
 
               <p>
 
@@ -1746,6 +2014,8 @@ function App() {
               </p>
 
             </div>
+
+
 
             <button
 
@@ -1764,6 +2034,8 @@ function App() {
         </main>
 
       )}
+
+
 
       {/* ADMIN LOGIN MODAL */}
 
@@ -1817,13 +2089,19 @@ function App() {
 
             </button>
 
+
+
             <span className="section-eyebrow">
 
               BATRA MOBILE ACCESSORIES
 
             </span>
 
+
+
             <h2>Owner Login</h2>
+
+
 
             <p>
 
@@ -1831,11 +2109,15 @@ function App() {
 
             </p>
 
+
+
             <label htmlFor="admin-email">
 
               Email Address
 
             </label>
+
+
 
             <input
 
@@ -1859,11 +2141,15 @@ function App() {
 
             />
 
+
+
             <label htmlFor="admin-password">
 
               Password
 
             </label>
+
+
 
             <div className="admin-password-field" style={{ position: "relative" }}>
               <input
@@ -1898,6 +2184,8 @@ function App() {
               </button>
             </div>
 
+
+
             {loginError && (
 
               <p className="admin-login-error" role="alert">
@@ -1907,6 +2195,8 @@ function App() {
               </p>
 
             )}
+
+
 
             <button
 
@@ -1922,6 +2212,8 @@ function App() {
 
             </button>
 
+
+
             <p className="admin-login-note">
 
               Owner access only.
@@ -1933,6 +2225,8 @@ function App() {
         </div>
 
       )}
+
+
 
       {/* FOOTER */}
 
@@ -1950,6 +2244,8 @@ function App() {
 
             />
 
+
+
             <p>
 
               Mobile accessories for your everyday needs. Find your
@@ -1960,9 +2256,13 @@ function App() {
 
           </div>
 
+
+
           <div className="footer-column">
 
             <h3>Quick Links</h3>
+
+
 
             <button onClick={() => goToPage("home")}>
 
@@ -1970,11 +2270,15 @@ function App() {
 
             </button>
 
+
+
             <button onClick={showAllProducts}>
 
               Shop Products
 
             </button>
+
+
 
             <button
 
@@ -1985,6 +2289,8 @@ function App() {
               Categories
 
             </button>
+
+
 
             <button
 
@@ -1998,9 +2304,13 @@ function App() {
 
           </div>
 
+
+
           <div className="footer-column">
 
             <h3>Categories</h3>
+
+
 
             {categories.slice(0, 4).map((category) => (
 
@@ -2020,15 +2330,21 @@ function App() {
 
           </div>
 
+
+
           <div className="footer-column">
 
             <h3>Contact Us</h3>
+
+
 
             <p>
 
               Have a question about a product or phone compatibility?
 
             </p>
+
+
 
             <button
 
@@ -2042,6 +2358,8 @@ function App() {
 
             </button>
 
+
+
             <button onClick={showAllProducts}>
 
               Browse products →
@@ -2050,17 +2368,23 @@ function App() {
 
           </div>
 
+
+
           {/* OWNER LOGIN IN FOOTER */}
 
           <div className="footer-column">
 
             <h3>Owner Access</h3>
 
+
+
             {isAdmin ? (
 
               <>
 
                 <p>Admin account is active.</p>
+
+
 
                 <button onClick={handleAdminLogout}>
 
@@ -2094,6 +2418,8 @@ function App() {
 
         </div>
 
+
+
         <div className="footer-bottom">
 
           <span>
@@ -2101,6 +2427,8 @@ function App() {
             © {new Date().getFullYear()} Batra Mobile Accessories.
 
           </span>
+
+
 
           <span>
 
@@ -2117,5 +2445,7 @@ function App() {
   );
 
 }
+
+
 
 export default App;
