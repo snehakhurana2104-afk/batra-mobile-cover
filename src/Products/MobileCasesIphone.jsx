@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import "./MobileCasesIphone.css";
 import paymentScanner from "../images/Payment Scanner.png";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
 const iphoneModels = [
   "iPhone 7 & iPhone 8",
   "iPhone X",
@@ -38,17 +40,6 @@ const iphoneModels = [
   "iPhone Air",
 ];
 
-const STORAGE_KEY = "batra_iphone_model_products_v1";
-
-const readProducts = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
-};
-
 const formatPrice = (price) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -56,8 +47,30 @@ const formatPrice = (price) =>
     maximumFractionDigits: 0,
   }).format(Number(price) || 0);
 
+function getProductId(product) {
+  return String(product._id || product.id || "");
+}
+
+function normalizeProduct(product) {
+  return {
+    ...product,
+    id: getProductId(product),
+    name: product.name || "",
+    price: Number(product.price) || 0,
+    image:
+      product.imageUrl ||
+      product.image ||
+      "",
+    imageName: product.imageName || "",
+    category: product.category || "Mobile Cases",
+    model: product.model || "",
+    quantity: 1,
+  };
+}
+
 export function MobileCasesIphone({
   isAdmin = false,
+  adminToken = "",
   onBack = () => {},
   onAddToCart = () => {},
   onBuyNow,
@@ -66,12 +79,15 @@ export function MobileCasesIphone({
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
 
-  const [allProducts, setAllProducts] = useState(readProducts);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Admin product form states
+  // Admin form states
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
-  const [productImage, setProductImage] = useState("");
+  const [productImage, setProductImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [imageName, setImageName] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
@@ -80,14 +96,98 @@ export function MobileCasesIphone({
   const [checkoutPage, setCheckoutPage] = useState("");
   const [purchaseProduct, setPurchaseProduct] = useState(null);
 
-  // Save products in browser storage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allProducts));
-    } catch {
-      setMessage("Storage full. Please upload a smaller image.");
+  const [messageTimer, setMessageTimer] = useState(null);
+
+  // API request helper
+  const apiRequest = async (path, options = {}) => {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        ...(adminToken
+          ? { Authorization: `Bearer ${adminToken}` }
+          : {}),
+      },
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        `Request failed (${response.status})`
+      );
     }
-  }, [allProducts]);
+
+    return data;
+  };
+
+  // Load products from MongoDB
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+
+      const data = await apiRequest("/api/products");
+
+      const productList = Array.isArray(data)
+        ? data
+        : Array.isArray(data.products)
+        ? data.products
+        : [];
+
+      setAllProducts(productList.map(normalizeProduct));
+    } catch (error) {
+      console.error("Products loading error:", error);
+      showMessage(error.message || "Unable to load products.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+
+    // Refresh products when this page becomes visible again
+    const handleFocus = () => loadProducts();
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (messageTimer) {
+        window.clearTimeout(messageTimer);
+      }
+    };
+  }, [messageTimer]);
+
+  function showMessage(text) {
+    setMessage(text);
+
+    if (messageTimer) {
+      window.clearTimeout(messageTimer);
+    }
+
+    const timer = window.setTimeout(() => {
+      setMessage("");
+    }, 3500);
+
+    setMessageTimer(timer);
+  }
+
+  function resetForm() {
+    setProductName("");
+    setProductPrice("");
+    setProductImage(null);
+    setImagePreview("");
+    setImageName("");
+    setEditingId(null);
+  }
 
   // Customer cannot access admin form
   useEffect(() => {
@@ -105,27 +205,10 @@ export function MobileCasesIphone({
     );
   }, [search]);
 
-  const products = allProducts[selectedModel] || [];
+  const products = allProducts.filter(
+    (product) => product.model === selectedModel
+  );
 
-  function showMessage(text) {
-    setMessage(text);
-
-    window.clearTimeout(window.batraIphoneMessageTimer);
-
-    window.batraIphoneMessageTimer = window.setTimeout(() => {
-      setMessage("");
-    }, 3000);
-  }
-
-  function resetForm() {
-    setProductName("");
-    setProductPrice("");
-    setProductImage("");
-    setImageName("");
-    setEditingId(null);
-  }
-
-  // Select iPhone model
   const handleModelSelect = (model) => {
     setSelectedModel(model);
     setSearch("");
@@ -135,7 +218,7 @@ export function MobileCasesIphone({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Upload and resize product image
+  // Select image file
   const handleImageUpload = (event) => {
     if (!isAdmin) return;
 
@@ -149,69 +232,25 @@ export function MobileCasesIphone({
       return;
     }
 
-    const reader = new FileReader();
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage("Image size must be less than 5 MB.");
+      event.target.value = "";
+      return;
+    }
 
-    reader.onload = (loadEvent) => {
-      const image = new Image();
+    setProductImage(file);
+    setImageName(file.name);
 
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxSize = 1000;
-
-        let width = image.width;
-        let height = image.height;
-
-        if (width > maxSize || height > maxSize) {
-          const scale = Math.min(
-            maxSize / width,
-            maxSize / height
-          );
-
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const context = canvas.getContext("2d");
-
-        if (!context) {
-          showMessage("Unable to process this image.");
-          return;
-        }
-
-        context.drawImage(image, 0, 0, width, height);
-
-        const resizedImage = canvas.toDataURL(
-          "image/jpeg",
-          0.75
-        );
-
-        setProductImage(resizedImage);
-        setImageName(file.name);
-      };
-
-      image.onerror = () => {
-        showMessage("Unable to load this image.");
-      };
-
-      image.src = loadEvent.target.result;
-    };
-
-    reader.onerror = () => {
-      showMessage("Image upload failed.");
-    };
-
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
   };
 
-  // Add or update product - Admin only
-  const saveProduct = (event) => {
+  // Add or update product in MongoDB and upload image to Cloudinary
+  const saveProduct = async (event) => {
     event.preventDefault();
 
-    if (!isAdmin) {
-      showMessage("Admin access required.");
+    if (!isAdmin || !adminToken) {
+      showMessage("Admin login required. Please login again.");
       return;
     }
 
@@ -234,69 +273,67 @@ export function MobileCasesIphone({
       return;
     }
 
-    const existingProducts = allProducts[selectedModel] || [];
+    try {
+      setSaving(true);
 
-    let updatedProducts;
+      const formData = new FormData();
+      formData.append("name", productName.trim());
+      formData.append("price", String(Number(productPrice)));
+      formData.append("category", "Mobile Cases");
+      formData.append("model", selectedModel);
 
-    if (editingId) {
-      updatedProducts = existingProducts.map((product) =>
-        product.id === editingId
-          ? {
-              ...product,
-              name: productName.trim(),
-              price: Number(productPrice),
-              image: productImage || product.image,
-              imageName: imageName || product.imageName,
-            }
-          : product
+      if (productImage) {
+        formData.append("image", productImage);
+      }
+
+      const path = editingId
+        ? `/api/products/${encodeURIComponent(editingId)}`
+        : "/api/products";
+
+      await apiRequest(path, {
+        method: editingId ? "PUT" : "POST",
+        body: formData,
+      });
+
+      await loadProducts();
+
+      showMessage(
+        editingId
+          ? "Product updated successfully!"
+          : "Product added successfully!"
       );
 
-      showMessage("Product updated successfully!");
-    } else {
-      const newProduct = {
-        id: `iphone-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 7)}`,
-        name: productName.trim(),
-        price: Number(productPrice),
-        image: productImage,
-        imageName,
-        category: "Mobile Cases",
-        model: selectedModel,
-        quantity: 1,
-      };
-
-      updatedProducts = [...existingProducts, newProduct];
-
-      showMessage("New product added successfully!");
+      resetForm();
+      setShowProductForm(false);
+    } catch (error) {
+      console.error("Product save error:", error);
+      showMessage(error.message || "Unable to save product.");
+    } finally {
+      setSaving(false);
     }
-
-    setAllProducts((current) => ({
-      ...current,
-      [selectedModel]: updatedProducts,
-    }));
-
-    resetForm();
-    setShowProductForm(false);
   };
 
-  // Edit product - Admin only
+  // Edit product
   const editProduct = (product) => {
     if (!isAdmin) return;
 
-    setEditingId(product.id);
+    setEditingId(getProductId(product));
     setProductName(product.name);
     setProductPrice(String(product.price));
-    setProductImage(product.image);
+    setProductImage(null);
+    setImagePreview(product.image || "");
     setImageName(product.imageName || "");
     setShowProductForm(true);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Delete product - Admin only
-  const deleteProduct = (productId) => {
-    if (!isAdmin) return;
+  // Delete product from MongoDB
+  const deleteProduct = async (productId) => {
+    if (!isAdmin || !adminToken) {
+      showMessage("Admin login required.");
+      return;
+    }
 
     const confirmed = window.confirm(
       "Are you sure you want to delete this product?"
@@ -304,29 +341,39 @@ export function MobileCasesIphone({
 
     if (!confirmed) return;
 
-    setAllProducts((current) => ({
-      ...current,
-      [selectedModel]: (current[selectedModel] || []).filter(
-        (product) => product.id !== productId
-      ),
-    }));
+    try {
+      await apiRequest(
+        `/api/products/${encodeURIComponent(productId)}`,
+        { method: "DELETE" }
+      );
 
-    if (editingId === productId) {
-      resetForm();
-      setShowProductForm(false);
+      setAllProducts((current) =>
+        current.filter(
+          (product) => getProductId(product) !== String(productId)
+        )
+      );
+
+      if (editingId === productId) {
+        resetForm();
+        setShowProductForm(false);
+      }
+
+      showMessage("Product deleted successfully.");
+    } catch (error) {
+      console.error("Product delete error:", error);
+      showMessage(error.message || "Unable to delete product.");
     }
-
-    showMessage("Product deleted successfully.");
   };
 
-  // Add to cart - Customer and Admin
+  // Add to cart
   const handleAddToCart = (product) => {
     onAddToCart({
       ...product,
-      id: product.id,
+      id: getProductId(product),
       name: `${product.name} (${product.model})`,
       price: Number(product.price),
       quantity: 1,
+      image: product.image,
     });
 
     showMessage("Product added to cart!");
@@ -334,17 +381,20 @@ export function MobileCasesIphone({
 
   // Buy now
   const handleBuyNow = (product) => {
-    if (onBuyNow) {
-      onBuyNow({
-        ...product,
-        name: `${product.name} (${product.model})`,
-        price: Number(product.price),
-      });
+    const selectedProduct = {
+      ...product,
+      id: getProductId(product),
+      name: `${product.name} (${product.model})`,
+      price: Number(product.price),
+      image: product.image,
+    };
 
+    if (onBuyNow) {
+      onBuyNow(selectedProduct);
       return;
     }
 
-    setPurchaseProduct(product);
+    setPurchaseProduct(selectedProduct);
     setCheckoutPage("options");
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -359,18 +409,12 @@ export function MobileCasesIphone({
   if (checkoutPage === "options" && purchaseProduct) {
     return (
       <main className="mc2-checkout-page">
-        <button
-          className="mc2-back-button"
-          onClick={goBackToProducts}
-        >
+        <button className="mc2-back-button" onClick={goBackToProducts}>
           ← Back to Products
         </button>
 
         <section className="mc2-checkout-panel">
-          <span className="mc2-eyebrow">
-            BATRA MOBILE ACCESSORIES
-          </span>
-
+          <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
           <h1>Purchase</h1>
 
           <img
@@ -418,7 +462,6 @@ export function MobileCasesIphone({
 
         <section className="mc2-checkout-panel">
           <span className="mc2-eyebrow">SECURE PAYMENT</span>
-
           <h1>Scan & Pay</h1>
           <h2>{formatPrice(purchaseProduct.price)}</h2>
           <p>{purchaseProduct.name}</p>
@@ -452,17 +495,13 @@ export function MobileCasesIphone({
     return (
       <main className="mc2-checkout-page">
         <section className="mc2-checkout-panel">
-          <span className="mc2-eyebrow">
-            BATRA MOBILE ACCESSORIES
-          </span>
-
+          <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
           <h1>Product Enquiry</h1>
           <h2>{purchaseProduct.name}</h2>
           <p>{purchaseProduct.model}</p>
           <h2>{formatPrice(purchaseProduct.price)}</h2>
 
           <p>Thank you for your enquiry!</p>
-
           <p>
             Please contact our shop for product availability and
             delivery details.
@@ -484,18 +523,13 @@ export function MobileCasesIphone({
     return (
       <main className="mc2-checkout-page">
         <section className="mc2-checkout-panel">
-          <span className="mc2-eyebrow">
-            BATRA MOBILE ACCESSORIES
-          </span>
-
+          <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
           <h1>Order Confirmation</h1>
           <h2>{purchaseProduct.name}</h2>
           <p>{purchaseProduct.model}</p>
           <h2>{formatPrice(purchaseProduct.price)}</h2>
 
-          <p>
-            Please confirm payment and delivery with the shop.
-          </p>
+          <p>Please confirm payment and delivery with the shop.</p>
 
           <button
             className="mc2-primary-button"
@@ -534,12 +568,8 @@ export function MobileCasesIphone({
       {!selectedModel ? (
         <>
           <div className="mc2-heading">
-            <span className="mc2-eyebrow">
-              BATRA MOBILE ACCESSORIES
-            </span>
-
+            <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
             <h1>Apple iPhone Models</h1>
-
             <p>
               Select your exact mobile model to explore available products.
             </p>
@@ -547,7 +577,6 @@ export function MobileCasesIphone({
 
           <div className="mc2-search">
             <span>⌕</span>
-
             <input
               type="search"
               placeholder="Search Apple models..."
@@ -593,30 +622,20 @@ export function MobileCasesIphone({
               ← All iPhone Models
             </button>
 
-            <span className="mc2-eyebrow">
-              BATRA MOBILE ACCESSORIES
-            </span>
-
+            <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
             <h1>{selectedModel} Covers</h1>
-
-            <p>
-              Explore the available collection for your iPhone.
-            </p>
+            <p>Explore the available collection for your iPhone.</p>
           </div>
 
-          {/* ADMIN PRODUCT MANAGEMENT - OWNER ONLY */}
+          {/* ADMIN PRODUCT MANAGEMENT */}
           {isAdmin && (
             <section className="mc2-form-section">
               <div className="mc2-form-heading">
                 <div>
-                  <span className="mc2-eyebrow">
-                    ADMIN PANEL
-                  </span>
-
+                  <span className="mc2-eyebrow">ADMIN PANEL</span>
                   <h2>
                     {editingId ? "Edit Product" : "Product Management"}
                   </h2>
-
                   <p>
                     Add a new product or update an existing product.
                   </p>
@@ -635,21 +654,15 @@ export function MobileCasesIphone({
                     }
                   }}
                 >
-                  {showProductForm
-                    ? "Close Form"
-                    : "+ Add Product"}
+                  {showProductForm ? "Close Form" : "+ Add Product"}
                 </button>
               </div>
 
               {showProductForm && (
-                <form
-                  className="mc2-form"
-                  onSubmit={saveProduct}
-                >
+                <form className="mc2-form" onSubmit={saveProduct}>
                   <div className="mc2-form-grid">
                     <label className="mc2-form-group">
                       <span>Product Name</span>
-
                       <input
                         type="text"
                         value={productName}
@@ -663,7 +676,6 @@ export function MobileCasesIphone({
 
                     <label className="mc2-form-group">
                       <span>Product Price (₹)</span>
-
                       <input
                         type="number"
                         min="1"
@@ -678,25 +690,19 @@ export function MobileCasesIphone({
 
                     <label className="mc2-form-group mc2-form-full">
                       <span>Upload Product Image</span>
-
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleImageUpload}
+                        required={!editingId}
                       />
                     </label>
                   </div>
 
-                  {productImage && (
+                  {imagePreview && (
                     <div className="mc2-image-preview">
-                      <img
-                        src={productImage}
-                        alt="Product preview"
-                      />
-
-                      <span>
-                        {imageName || "Selected product image"}
-                      </span>
+                      <img src={imagePreview} alt="Product preview" />
+                      <span>{imageName || "Product image"}</span>
                     </div>
                   )}
 
@@ -704,8 +710,11 @@ export function MobileCasesIphone({
                     <button
                       type="submit"
                       className="mc2-primary-button"
+                      disabled={saving}
                     >
-                      {editingId
+                      {saving
+                        ? "Saving..."
+                        : editingId
                         ? "Update Product"
                         : "Save Product"}
                     </button>
@@ -713,6 +722,7 @@ export function MobileCasesIphone({
                     <button
                       type="button"
                       className="mc2-secondary-button"
+                      disabled={saving}
                       onClick={() => {
                         resetForm();
                         setShowProductForm(false);
@@ -726,29 +736,26 @@ export function MobileCasesIphone({
             </section>
           )}
 
-          {/* PRODUCT COLLECTION - BOTH OWNER AND CUSTOMER */}
+          {/* PRODUCT COLLECTION */}
           <div className="mc2-product-toolbar">
             <div>
-              <span className="mc2-eyebrow">
-                OUR COLLECTION
-              </span>
-
+              <span className="mc2-eyebrow">OUR COLLECTION</span>
               <h2>{selectedModel} Collection</h2>
-
-              {isAdmin && (
-                <p>{products.length} products added</p>
-              )}
+              {isAdmin && <p>{products.length} products added</p>}
             </div>
           </div>
 
-          {products.length > 0 ? (
+          {loading ? (
+            <div className="mc2-no-results">
+              Loading products...
+            </div>
+          ) : products.length > 0 ? (
             <div className="mc2-product-grid">
               {products.map((product) => (
                 <article
                   className="mc2-product-card"
-                  key={product.id}
+                  key={getProductId(product)}
                 >
-                  {/* PRODUCT IMAGE - VISIBLE TO EVERYONE */}
                   <div className="mc2-product-image-wrap">
                     <img
                       src={product.image}
@@ -758,7 +765,6 @@ export function MobileCasesIphone({
                     />
                   </div>
 
-                  {/* PRODUCT NAME AND PRICE - VISIBLE TO EVERYONE */}
                   <div className="mc2-product-info">
                     <span className="mc2-product-model">
                       {selectedModel}
@@ -767,13 +773,10 @@ export function MobileCasesIphone({
                     <h3>{product.name}</h3>
 
                     <div className="mc2-price">
-                      <strong>
-                        {formatPrice(product.price)}
-                      </strong>
+                      <strong>{formatPrice(product.price)}</strong>
                     </div>
                   </div>
 
-                  {/* SHOPPING OPTIONS - VISIBLE TO EVERYONE */}
                   <div className="mc2-product-actions">
                     <button
                       type="button"
@@ -792,7 +795,6 @@ export function MobileCasesIphone({
                     </button>
                   </div>
 
-                  {/* EDIT AND DELETE - OWNER ONLY */}
                   {isAdmin && (
                     <div className="mc2-admin-actions">
                       <button
@@ -805,7 +807,7 @@ export function MobileCasesIphone({
                       <button
                         type="button"
                         className="mc2-delete-button"
-                        onClick={() => deleteProduct(product.id)}
+                        onClick={() => deleteProduct(getProductId(product))}
                       >
                         Delete
                       </button>
@@ -817,9 +819,7 @@ export function MobileCasesIphone({
           ) : (
             <div className="mc2-no-results">
               <span className="mc2-empty-icon">▣</span>
-
               <h3>No products available</h3>
-
               <p>
                 {isAdmin
                   ? "Use Add Product to upload the first product for this model."
