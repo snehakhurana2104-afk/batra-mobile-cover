@@ -142,16 +142,15 @@ app.get("/api/health", async (req, res) => {
       message: "Batra backend and MongoDB are connected",
       database: "connected",
     });
-  } catch (error) {
-    // Detailed error stays in the server terminal
-    console.error("MongoDB health check failed:", error);
+  }catch (error) {
+  console.error("MongoDB connection error:", error);
 
-    res.status(500).json({
-      status: "error",
-      message: "MongoDB connection failed",
-      hint: "Check the server terminal for the exact error.",
-    });
-  }
+  return res.status(500).json({
+    status: "error",
+    message: "MongoDB connection failed",
+    details: error.message
+  });
+}
 });
 
 // Admin login
