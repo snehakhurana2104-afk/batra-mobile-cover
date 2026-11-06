@@ -12,16 +12,18 @@ import { v2 as cloudinary } from "cloudinary";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(helmet());
 app.use(express.json({ limit: "1mb" }));
 
-// MongoDB connection
+// ==========================================
+// MONGODB CONNECTION
+// ==========================================
+
 let clientPromise;
 
 async function getMongoClient() {
   if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is missing in .env");
+    throw new Error("MONGODB_URI is missing in environment variables");
   }
 
   if (!clientPromise) {
@@ -39,14 +41,25 @@ async function getMongoClient() {
   return clientPromise;
 }
 
-async function getProductsCollection() {
+async function getCollection(collectionName) {
   const client = await getMongoClient();
   const db = client.db(process.env.MONGODB_DB || "batra_accessories");
 
-  return db.collection("products");
+  return db.collection(collectionName);
 }
 
-// Admin accounts
+async function getProductsCollection() {
+  return getCollection("products");
+}
+
+async function getOrdersCollection() {
+  return getCollection("orders");
+}
+
+// ==========================================
+// ADMIN ACCOUNTS
+// ==========================================
+
 function getAdminUsers() {
   try {
     const users = JSON.parse(process.env.ADMIN_USERS_JSON || "[]");
@@ -61,12 +74,17 @@ function getAdminUsers() {
   }
 }
 
-// JWT authentication
+// ==========================================
+// ADMIN AUTHENTICATION
+// ==========================================
+
 function requireAdmin(req, res, next) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
 
   if (!token || !process.env.JWT_SECRET) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
   }
 
   try {
@@ -79,7 +97,10 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// Login rate limit
+// ==========================================
+// LOGIN RATE LIMIT
+// ==========================================
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -90,10 +111,15 @@ const loginLimiter = rateLimit({
   },
 });
 
-// Image upload setup
+// ==========================================
+// IMAGE UPLOAD
+// ==========================================
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
   fileFilter: (req, file, callback) => {
     if (!file.mimetype.startsWith("image/")) {
       return callback(new Error("Only image files are allowed"));
@@ -117,7 +143,9 @@ function uploadImage(buffer) {
 
     cloudinary.uploader
       .upload_stream(
-        { folder: "batra-mobile-accessories" },
+        {
+          folder: "batra-mobile-accessories",
+        },
         (error, result) => {
           if (error) return reject(error);
           resolve(result);
@@ -127,33 +155,162 @@ function uploadImage(buffer) {
   });
 }
 
-// Health check
+// ==========================================
+// DASHBOARD HELPER FUNCTIONS
+// ==========================================
+
+function getNumber(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/[₹,\s]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+}
+
+function getOrderAmount(order) {
+  return getNumber(
+    order.totalAmount ??
+    order.total ??
+    order.grandTotal ??
+    order.amount ??
+    order.totalPrice ??
+    0
+  );
+}
+
+function getOrderStatus(order) {
+  return String(
+    order.orderStatus ??
+    order.status ??
+    "pending"
+  ).toLowerCase().trim();
+}
+
+function getPaymentStatus(order) {
+  return String(
+    order.paymentStatus ??
+    order.payment_status ??
+    ""
+  ).toLowerCase().trim();
+}
+
+function isOrderPaid(order) {
+  const paymentStatus = getPaymentStatus(order);
+
+  return (
+    order.isPaid === true ||
+    order.paid === true ||
+    ["paid", "success", "successful", "verified"].includes(paymentStatus)
+  );
+}
+
+function getOrderItems(order) {
+  if (Array.isArray(order.items)) return order.items;
+  if (Array.isArray(order.products)) return order.products;
+
+  return [];
+}
+
+function getItemQuantity(item) {
+  return getNumber(item.quantity ?? item.qty ?? 1);
+}
+
+function getItemName(item) {
+  return String(
+    item.name ??
+    item.productName ??
+    item.title ??
+    "Unknown Product"
+  );
+}
+
+function getItemPrice(item) {
+  return getNumber(
+    item.price ??
+    item.sellingPrice ??
+    item.unitPrice ??
+    0
+  );
+}
+
+function getItemCost(item) {
+  return getNumber(
+    item.costPrice ??
+    item.purchasePrice ??
+    item.cost ??
+    0
+  );
+}
+
+function getOrderDate(order) {
+  const date =
+    order.createdAt ??
+    order.orderDate ??
+    order.date ??
+    null;
+
+  if (!date) return null;
+
+  const parsed = new Date(date);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function calculateOrderProfit(order) {
+  // Use explicitly saved profit if available.
+  if (order.profit !== undefined) {
+    return getNumber(order.profit);
+  }
+
+  // Otherwise calculate from item selling price and cost price.
+  const items = getOrderItems(order);
+
+  return items.reduce((total, item) => {
+    const quantity = getItemQuantity(item);
+    const sellingPrice = getItemPrice(item);
+    const costPrice = getItemCost(item);
+
+    return total + (sellingPrice - costPrice) * quantity;
+  }, 0);
+}
+
+// ==========================================
+// HEALTH CHECK
+// ==========================================
+
 app.get("/api/health", async (req, res) => {
   try {
     const client = await getMongoClient();
 
-    // Verify that MongoDB responds to a ping
-    await client.db(
-      process.env.MONGODB_DB || "batra_accessories"
-    ).command({ ping: 1 });
+    await client
+      .db(process.env.MONGODB_DB || "batra_accessories")
+      .command({ ping: 1 });
 
     res.json({
       status: "ok",
       message: "Batra backend and MongoDB are connected",
       database: "connected",
     });
-  }catch (error) {
-  console.error("MongoDB connection error:", error);
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
 
-  return res.status(500).json({
-    status: "error",
-    message: "MongoDB connection failed",
-    details: error.message
-  });
-}
+    res.status(500).json({
+      status: "error",
+      message: "MongoDB connection failed",
+      details: error.message,
+    });
+  }
 });
 
-// Admin login
+// ==========================================
+// ADMIN LOGIN
+// ==========================================
+
 app.post("/api/admin/login", loginLimiter, async (req, res) => {
   try {
     const email = String(req.body.email || "")
@@ -179,7 +336,7 @@ app.post("/api/admin/login", loginLimiter, async (req, res) => {
     }
 
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is missing in .env");
+      console.error("JWT_SECRET is missing");
 
       return res.status(500).json({
         error: "Server authentication is not configured",
@@ -187,9 +344,13 @@ app.post("/api/admin/login", loginLimiter, async (req, res) => {
     }
 
     const token = jwt.sign(
-      { email: admin.email },
+      {
+        email: admin.email,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "8h" }
+      {
+        expiresIn: "8h",
+      }
     );
 
     res.json({
@@ -205,7 +366,133 @@ app.post("/api/admin/login", loginLimiter, async (req, res) => {
   }
 });
 
-// Get all products
+// ==========================================
+// ADMIN DASHBOARD API
+// ==========================================
+
+app.get("/api/admin/dashboard", requireAdmin, async (req, res) => {
+  try {
+    const ordersCollection = await getOrdersCollection();
+
+    const orders = await ordersCollection
+      .find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .toArray();
+
+    const now = new Date();
+
+    const sevenDaysAgo = new Date(
+      now.getTime() - 7 * 24 * 60 * 60 * 1000
+    );
+
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalSalesCount = 0;
+    let unitsSold = 0;
+    let pendingOrders = 0;
+    let completedOrders = 0;
+    let newOrders = 0;
+    let paidPayments = 0;
+
+    const bestSellerMap = new Map();
+
+    for (const order of orders) {
+      const status = getOrderStatus(order);
+      const paid = isOrderPaid(order);
+      const orderDate = getOrderDate(order);
+
+      if (
+        ["pending", "processing", "confirmed"].includes(status)
+      ) {
+        pendingOrders++;
+      }
+
+      if (
+        ["completed", "delivered"].includes(status)
+      ) {
+        completedOrders++;
+      }
+
+      if (orderDate && orderDate >= sevenDaysAgo) {
+        newOrders++;
+      }
+
+      if (paid) {
+        totalRevenue += getOrderAmount(order);
+        totalProfit += calculateOrderProfit(order);
+        totalSalesCount++;
+        paidPayments++;
+      }
+
+      if (paid) {
+        const items = getOrderItems(order);
+
+        for (const item of items) {
+          const name = getItemName(item);
+          const quantity = getItemQuantity(item);
+
+          unitsSold += quantity;
+
+          const previous = bestSellerMap.get(name) || {
+            name,
+            productName: name,
+            unitsSold: 0,
+            quantity: 0,
+            totalSales: 0,
+          };
+
+          previous.unitsSold += quantity;
+          previous.quantity += quantity;
+          previous.totalSales += getItemPrice(item) * quantity;
+
+          bestSellerMap.set(name, previous);
+        }
+      }
+    }
+
+    const bestSellers = Array.from(bestSellerMap.values())
+      .sort((a, b) => b.unitsSold - a.unitsSold)
+      .slice(0, 5);
+
+    const recentOrders = orders.slice(0, 10).map((order) => ({
+      ...order,
+      _id: String(order._id),
+      orderId: String(
+        order.orderId ||
+        order._id
+      ),
+      totalAmount: getOrderAmount(order),
+      status: getOrderStatus(order),
+      paymentStatus: getPaymentStatus(order),
+    }));
+
+    res.json({
+      stats: {
+        totalRevenue,
+        totalProfit,
+        totalSalesCount,
+        unitsSold,
+        pendingOrders,
+        completedOrders,
+        newOrders,
+        paidPayments,
+      },
+      recentOrders,
+      bestSellers,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+
+    res.status(500).json({
+      error: "Could not load dashboard data",
+    });
+  }
+});
+
+// ==========================================
+// GET ALL PRODUCTS
+// ==========================================
+
 app.get("/api/products", async (req, res) => {
   try {
     const products = await getProductsCollection();
@@ -225,7 +512,10 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// Add product
+// ==========================================
+// ADD PRODUCT
+// ==========================================
+
 app.post(
   "/api/products",
   requireAdmin,
@@ -264,7 +554,10 @@ app.post(
   }
 );
 
-// Edit product
+// ==========================================
+// EDIT PRODUCT
+// ==========================================
+
 app.put(
   "/api/products/:id",
   requireAdmin,
@@ -293,8 +586,12 @@ app.put(
       product.updatedAt = new Date();
 
       const result = await products.updateOne(
-        { _id: new ObjectId(req.params.id) },
-        { $set: product }
+        {
+          _id: new ObjectId(req.params.id),
+        },
+        {
+          $set: product,
+        }
       );
 
       if (!result.matchedCount) {
@@ -316,7 +613,10 @@ app.put(
   }
 );
 
-// Delete product
+// ==========================================
+// DELETE PRODUCT
+// ==========================================
+
 app.delete(
   "/api/products/:id",
   requireAdmin,
@@ -353,7 +653,10 @@ app.delete(
   }
 );
 
-// Global error handler
+// ==========================================
+// GLOBAL ERROR HANDLER
+// ==========================================
+
 app.use((error, req, res, next) => {
   console.error("Server error:", error);
 
@@ -366,11 +669,14 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start backend
+// ==========================================
+// START BACKEND
+// ==========================================
+
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`Batra backend running at http://localhost:${PORT}`);
-    console.log("MongoDB connection will be checked at /api/health");
+    console.log("Health check: http://localhost:" + PORT + "/api/health");
   });
 }
 

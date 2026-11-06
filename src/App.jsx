@@ -4,9 +4,10 @@ import React, { useMemo, useState } from "react";
 
 import "./App.css";
 
+
 import batraLogo from "./images/Batra Logo.jpeg";
 
-
+import Dashboard from "./Products/Dashboard.jsx";
 
 import * as MobileCasesModule from "./Products/MobileCases.jsx";
 
@@ -346,7 +347,9 @@ function App() {
 
   // ADMIN LOGIN STATES
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(
+  () => Boolean(sessionStorage.getItem("batraAdminToken"))
+);
 
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
@@ -545,7 +548,7 @@ function App() {
 
 
 
-      goToPage("home");
+      goToPage("admin-dashboard");
 
     } catch (error) {
 
@@ -1281,7 +1284,21 @@ function App() {
 
       {/* PAGE CONTENT */}
 
-      {activePage === "mobile-cases-iphone" ? (
+      {activePage === "admin-dashboard" ? (
+
+        isAdmin && adminToken ? (
+          <Dashboard adminToken={adminToken} onLogout={handleAdminLogout} />
+        ) : (
+          <main className="admin-dashboard-page">
+            <section className="admin-dashboard-card">
+              <h1>Owner Access Required</h1>
+              <p>Please log in with your owner account to access the dashboard.</p>
+              <button type="button" onClick={() => goToPage("home")}>Back to Home</button>
+            </section>
+          </main>
+        )
+
+      ) : activePage === "mobile-cases-iphone" ? (
 
         MobileCasesIphone ? (
 
@@ -2383,6 +2400,10 @@ function App() {
               <>
 
                 <p>Admin account is active.</p>
+
+                <button onClick={() => goToPage("admin-dashboard")}>
+                  My Dashboard
+                </button>
 
 
 

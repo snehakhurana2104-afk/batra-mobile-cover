@@ -474,12 +474,12 @@ export function MobileCasesIphone({
 
           <p>Scan the QR code using your UPI app.</p>
 
-          <button
-            className="mc2-primary-button"
-            onClick={() => setCheckoutPage("success")}
-          >
-            I Have Completed Payment
-          </button>
+       <button
+  className="mc2-primary-button"
+  onClick={() => setCheckoutPage("verification")}
+>
+  Done
+</button>
 
           <p className="mc2-payment-note">
             Payment is not automatically verified by this website.
@@ -519,29 +519,44 @@ export function MobileCasesIphone({
   }
 
   // ORDER CONFIRMATION
-  if (checkoutPage === "success" && purchaseProduct) {
-    return (
-      <main className="mc2-checkout-page">
-        <section className="mc2-checkout-panel">
-          <span className="mc2-eyebrow">BATRA MOBILE ACCESSORIES</span>
-          <h1>Order Confirmation</h1>
-          <h2>{purchaseProduct.name}</h2>
-          <p>{purchaseProduct.model}</p>
-          <h2>{formatPrice(purchaseProduct.price)}</h2>
+  // ORDER CONFIRMATION
+if (checkoutPage === "verification" && purchaseProduct) {
+  return (
+    <main className="mc2-checkout-page">
+      <section className="mc2-checkout-panel">
+        <span className="mc2-eyebrow">
+          BATRA MOBILE ACCESSORIES
+        </span>
 
-          <p>Please confirm payment and delivery with the shop.</p>
+        <div className="mc2-order-success-icon">✓</div>
 
-          <button
-            className="mc2-primary-button"
-            onClick={goBackToProducts}
-          >
-            Continue Shopping
-          </button>
-        </section>
-      </main>
-    );
-  }
+        <h1>Order Placed Successfully!</h1>
 
+        <img
+          src={purchaseProduct.image}
+          alt={purchaseProduct.name}
+          className="mc2-checkout-product-image"
+        />
+
+        <h2>{purchaseProduct.name}</h2>
+
+        <p>{purchaseProduct.model}</p>
+
+        <h2>{formatPrice(purchaseProduct.price)}</h2>
+
+        <p>Thank you for shopping with us!</p>
+
+        <button
+          type="button"
+          className="mc2-primary-button"
+          onClick={goBackToProducts}
+        >
+          Continue Shopping
+        </button>
+      </section>
+    </main>
+  );
+}
   return (
     <div className="mc2-page">
       {message && (
